@@ -1,0 +1,5 @@
+flet
+tinydb
+pyautogui
+opencv-python
+pillow
