@@ -1,10 +1,8 @@
 import flet as ft
 from tinydb import TinyDB
 from whatsappHandle import enviar_mensagem
-from printScreen import capture_region, close
-
-
-
+from printScreen import ScreenCaptureApp
+import threading
 
 # Inicializar o banco de dados
 db = TinyDB('db.json')
@@ -33,7 +31,7 @@ def enviaMensagem(mensagem,page):
     status = enviar_mensagem(mensagem)
     if status == "CampoNaoEncontrado":
         page.open(bs)
-        capture_region()
+        ScreenCaptureApp().capture_region()
         
         page.close(bs)
         enviar_mensagem(mensagem)
@@ -117,7 +115,7 @@ def atualizar_lixeira(page):
 
 # Função para atualizar a lista de mensagens da lixeira
 def atualizar_campoMensagem(page):
-    capture_region()
+    ScreenCaptureApp().capture_region()
 
 
 # Função para restaurar todas as mensagens da lixeira
@@ -373,6 +371,49 @@ def main(page: ft.Page):
         ],
     )
 
+    def pick_files_result(e: ft.FilePickerResultEvent):
+        selected_files.value = (
+            ", ".join(map(lambda f: f.name, e.files)) if e.files else "Cancelled!"
+        )
+        selected_files.update()
+
+    pick_files_dialog = ft.FilePicker(on_result=pick_files_result)
+    selected_files = ft.Text()
+
+    page.overlay.append(pick_files_dialog)
+
+    modal_backup = ft.AlertDialog(
+        title=ft.Text("BACKUP / RESTAURAR"),
+        content=ft.Column(
+            [
+                ft.Row([
+
+                ft.ElevatedButton(
+                    "Importar arquivo",
+                    icon=ft.Icons.DOWNLOAD,
+                    on_click=lambda _: pick_files_dialog.pick_files(
+                        allow_multiple=True
+                    ),
+                ),  
+
+                ft.ElevatedButton(
+                    "Exportar arquivo",
+                    icon=ft.Icons.FILE_UPLOAD,
+                    
+                )
+                
+                ], alignment=ft.MainAxisAlignment.SPACE_AROUND,)
+
+
+            ], width=600
+        ),
+        actions=[
+            ft.TextButton("Cancelar", on_click=lambda e: handle_close(modal_backup)),
+            ft.TextButton("Adicionar",
+                          on_click=lambda e: adicionar_mensagem(page, nova_mensagem, page.close(modal_backup))),
+        ],
+    )
+
     # Criando a topbar principal
     global topbar
     topbar = ft.Row(
@@ -390,19 +431,19 @@ def main(page: ft.Page):
                 tooltip="Novo"
             ),
 
-            ft.Text("Mensagens Automáticas", size=20, weight="bold"),
+            # ft.Text("Mensagens Automáticas", size=20, weight="bold"),
 
             ft.ElevatedButton(
                 content=ft.Row(
                     [
-                        ft.Icon(ft.Icons.ADD_A_PHOTO),
-                        ft.Text("Campo de Mensagem", size=16)
+                        ft.Icon(ft.Icons.BACKUP),
+                        ft.Text("Backup / Restaurar", size=16)
                     ],
                     alignment=ft.MainAxisAlignment.START,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER
                 ),
-                on_click=lambda e: atualizar_campoMensagem(page),
-                tooltip="atualiza a posição do campo de mensagem"
+                on_click=lambda e: page.open(modal_backup),
+                tooltip="Faça o backup ou restaure mensagens."
             ),
 
             ft.ElevatedButton(

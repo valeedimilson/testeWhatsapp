@@ -1,62 +1,69 @@
 import tkinter as tk
 from PIL import ImageGrab
 
-def on_drag(event):
-    global x1, y1, x2, y2
-    x2, y2 = event.x, event.y
-    canvas.coords(rect, x1, y1, x2, y2)
+class ScreenCaptureApp:
+    def __init__(self):
+        self.root = None
+        self.canvas = None
+        self.rect = None
+        self.x1 = self.y1 = self.x2 = self.y2 = 0
 
-def on_click(event):
-    global x1, y1, x2, y2
-    x1, y1 = event.x, event.y
-    x2, y2 = x1, y1
-    canvas.coords(rect, x1, y1, x2, y2)
+    def on_drag(self, event):
+        self.x2, self.y2 = event.x, event.y
+        self.canvas.coords(self.rect, self.x1, self.y1, self.x2, self.y2)
 
-def on_release(event):
-    global x1, y1, x2, y2
-    x2, y2 = event.x, event.y
-    
-    # Ensure that x1, x2, y1, y2 are in the correct order
-    left = min(x1, x2)
-    top = min(y1, y2)
-    right = max(x1, x2)
-    bottom = max(y1, y2)
-    
-    root.withdraw()
-    root.update_idletasks()
-    screenshot = ImageGrab.grab(bbox=(root.winfo_rootx() + left, root.winfo_rooty() + top, root.winfo_rootx() + right, root.winfo_rooty() + bottom))
-    screenshot.save("captura.png")
-    
-    print("Captura salva como captura.png")
-    root.quit()
-    root.destroy()
+    def on_click(self, event):
+        self.x1, self.y1 = event.x, event.y
+        self.x2, self.y2 = self.x1, self.y1
+        self.canvas.coords(self.rect, self.x1, self.y1, self.x2, self.y2)
 
-def close(event):
-    root.quit()
-    root.destroy()
+    def on_release(self, event):
+        self.x2, self.y2 = event.x, event.y
+        left = min(self.x1, self.x2)
+        top = min(self.y1, self.y2)
+        right = max(self.x1, self.x2)
+        bottom = max(self.y1, self.y2)
 
+        self.root.withdraw()
+        self.root.update_idletasks()
+        screenshot = ImageGrab.grab(bbox=(self.root.winfo_rootx() + left, self.root.winfo_rooty() + top,
+                                          self.root.winfo_rootx() + right, self.root.winfo_rooty() + bottom))
+        screenshot.save("captura.png")
 
-def capture_region():
-    global root, canvas, rect
+        print("Captura salva como captura.png")
+        self.cleanup()
 
-    # if root:
-    #     if root.winfo_exists():
-    #         print("Fechando a janela Tkinter...")
-    #         root.quit()  # Encerra o mainloop
-    #         root.destroy()  # Destroi a janela
-    
-    root = tk.Tk()
-    root.attributes("-fullscreen", True)
-    root.attributes("-alpha", 0.3)
-    canvas = tk.Canvas(root, cursor="cross")
-    canvas.pack(fill=tk.BOTH, expand=True)
-    rect = canvas.create_rectangle(0, 0, 0, 0, outline="red", width=2)
-    canvas.bind("<ButtonPress-1>", on_click)
-    canvas.bind("<ButtonPress-2>", close)
-    canvas.bind("<ButtonPress-3>", close)
-    canvas.bind("<B1-Motion>", on_drag)
-    canvas.bind("<ButtonRelease-1>", on_release)
-    root.mainloop()
+    def printScreenStopEvent(self, event):
+        self.cleanup()
+
+    def cleanup(self):
+        if self.root:
+            self.root.quit()
+            self.root.destroy()
+            self.root = None
+
+    def capture_region(self):
+        if self.root is not None:
+            # If root already exists, prevent creating a new instance
+            return
+
+        self.root = tk.Tk()
+        self.root.attributes("-fullscreen", True)
+        self.root.attributes("-alpha", 0.3)
+
+        self.canvas = tk.Canvas(self.root, cursor="cross")
+        self.canvas.pack(fill=tk.BOTH, expand=True)
+
+        self.rect = self.canvas.create_rectangle(0, 0, 0, 0, outline="red", width=2)
+        self.canvas.bind("<ButtonPress-1>", self.on_click)
+        self.canvas.bind("<ButtonPress-2>", self.printScreenStopEvent)
+        self.canvas.bind("<ButtonPress-3>", self.printScreenStopEvent)
+        self.canvas.bind("<B1-Motion>", self.on_drag)
+        self.canvas.bind("<ButtonRelease-1>", self.on_release)
+
+        self.root.mainloop()
+
 
 if __name__ == "__main__":
-    capture_region()
+    capture_app = ScreenCaptureApp()
+    capture_app.capture_region()
