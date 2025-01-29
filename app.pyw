@@ -1,45 +1,10 @@
 import flet as ft
 from tinydb import TinyDB
-import pyautogui
+from whatsappHandle import enviar_mensagem
+from printScreen import capture_region, close
 
 
-def encontrar_campo_mensagem():
-    try:
-        campo_mensagem = pyautogui.locateOnScreen('_internal/images/campo_mensagem_light.png', confidence=0.8)
-        if campo_mensagem is not None:
-            return pyautogui.center(campo_mensagem)
-    except pyautogui.ImageNotFoundException:
-        print("não encontrado no tema claro")
 
-    try:
-        campo_mensagem = pyautogui.locateOnScreen('_internal/images/campo_mensagem_dark.png', confidence=0.8)
-        if campo_mensagem is not None:
-            return pyautogui.center(campo_mensagem)
-    except pyautogui.ImageNotFoundException:
-        print("não encontrado no tema escuro")
-
-    print("Campo de mensagem não encontrado na tela!")
-    return None
-
-# Função para enviar a mensagem ao WhatsApp Web
-def enviar_mensagem(mensagem):
-    campo_mensagem_centro = encontrar_campo_mensagem()
-    if campo_mensagem_centro is None:
-        # sys.exit()
-        return False
-
-    pyautogui.click(campo_mensagem_centro)
-
-    # Quebra a mensagem em linhas
-    linhas = mensagem.split('\n')
-
-    for i, linha in enumerate(linhas):
-        # Escreve a linha
-        pyautogui.write(linha, interval=0)
-
-        # Se não for a última linha, envia a combinação Ctrl + Enter para nova linha
-        if i < len(linhas) - 1:
-            pyautogui.hotkey('ctrl', 'enter')
 
 # Inicializar o banco de dados
 db = TinyDB('db.json')
@@ -48,8 +13,31 @@ lixeira_table = db.table('lixeira')
 
 
 # Função chamada quando a mensagem é clicada
-def enviaMensagem(mensagem):
-    enviar_mensagem(mensagem)
+def enviaMensagem(mensagem,page):
+    def handle_dismissal(e):
+        page.close(bs)
+
+    bs = ft.BottomSheet(
+        on_dismiss=handle_dismissal,
+        content=ft.Container(
+            padding=50,
+            content=ft.Column(
+                tight=True,
+                controls=[
+                    ft.Text("O campo de mensagem do whatsapp não foi localizado. Vamos localiza-lo agora.  Com o mouse selecione o icone de EMOJI.")
+                ],
+            ),
+        ),
+    )
+    # page.open(bs)
+    status = enviar_mensagem(mensagem)
+    if status == "CampoNaoEncontrado":
+        page.open(bs)
+        capture_region()
+        
+        page.close(bs)
+        enviar_mensagem(mensagem)
+
 
 
 # Função para adicionar nova mensagem
@@ -127,6 +115,11 @@ def atualizar_lixeira(page):
     page.update()
 
 
+# Função para atualizar a lista de mensagens da lixeira
+def atualizar_campoMensagem(page):
+    capture_region()
+
+
 # Função para restaurar todas as mensagens da lixeira
 def restaurar_todos(page):
     mensagens_lixeira = carregar_lixeira()
@@ -200,7 +193,7 @@ def create_card_lixeira(mensagem_id, mensagem, page):
     return ft.Card(
         content=ft.GestureDetector(
             mouse_cursor=ft.MouseCursor.MOVE,
-            on_tap=lambda e: enviaMensagem(mensagem),
+            on_tap=lambda e: enviaMensagem(mensagem, page),
             content=ft.Container(
                 content=ft.Column(
                     [
@@ -314,7 +307,7 @@ def create_card(mensagem_id, mensagem, fixado, page):
 
     return ft.Card(
         content=ft.GestureDetector(
-            on_tap=lambda e: enviaMensagem(mensagem),
+            on_tap=lambda e: enviaMensagem(mensagem, page),
             content=ft.Container(
                 content=ft.Column(
                     [
@@ -396,7 +389,22 @@ def main(page: ft.Page):
                 on_click=lambda e: page.open(modal_novo),
                 tooltip="Novo"
             ),
+
             ft.Text("Mensagens Automáticas", size=20, weight="bold"),
+
+            ft.ElevatedButton(
+                content=ft.Row(
+                    [
+                        ft.Icon(ft.Icons.ADD_A_PHOTO),
+                        ft.Text("Campo de Mensagem", size=16)
+                    ],
+                    alignment=ft.MainAxisAlignment.START,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER
+                ),
+                on_click=lambda e: atualizar_campoMensagem(page),
+                tooltip="atualiza a posição do campo de mensagem"
+            ),
+
             ft.ElevatedButton(
                 content=ft.Row(
                     [
@@ -409,8 +417,8 @@ def main(page: ft.Page):
                 on_click=lambda e: atualizar_lixeira(page),
                 tooltip="Lixeira"
             )
-            # Mostrar lixeira
         ],
+
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
     )
