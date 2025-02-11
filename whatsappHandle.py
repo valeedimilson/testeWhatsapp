@@ -34,6 +34,7 @@ def encontrar_campo_mensagem():
 
 
 def enviar_mensagem(mensagem):
+    posMouseAnteriorX, posMouseAnteriorY = pyautogui.position()
     campo_mensagem_centro = encontrar_campo_mensagem()
     if campo_mensagem_centro is None:
         # sys.exit()
@@ -62,3 +63,5 @@ def enviar_mensagem(mensagem):
         # Se não for a última linha, envia a combinação Ctrl + Enter para nova linha
         if i < len(linhas) - 1:
             pyautogui.hotkey('ctrl', 'enter')
+
+    pyautogui.moveTo(x=posMouseAnteriorX, y=posMouseAnteriorY)

@@ -1,5 +1,1 @@
-flet
-tinydb
-pyautogui
-opencv-python
-pillow
+pip install flet tinydb pyautogui opencv-python pillow
