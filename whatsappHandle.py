@@ -1,6 +1,7 @@
 import pyautogui
 import pygetwindow as gw
 
+
 def encontrar_campo_mensagem():
     # try:
     #     campo_mensagem = pyautogui.locateOnScreen('captura.png', confidence=0.8)
@@ -10,7 +11,8 @@ def encontrar_campo_mensagem():
     #     print("não encontrado no tema claro")
 
     try:
-        campo_mensagem = pyautogui.locateOnScreen('captura.png', confidence=0.8)
+        campo_mensagem = pyautogui.locateOnScreen(
+            'captura.png', confidence=0.8)
         if campo_mensagem is not None:
             posAntiga = pyautogui.center(campo_mensagem)
             pos = [posAntiga[0], posAntiga[1]]
@@ -29,6 +31,8 @@ def encontrar_campo_mensagem():
     return None
 
 # Função para enviar a mensagem ao WhatsApp Web
+
+
 def enviar_mensagem(mensagem):
     campo_mensagem_centro = encontrar_campo_mensagem()
     if campo_mensagem_centro is None:
@@ -42,12 +46,12 @@ def enviar_mensagem(mensagem):
 
     # Filtra e exibe o título das janelas que contêm o nome do navegador
 
-    if "Chrome" not in window.title and "Firefox" not in window.title:
+    if "WhatsApp" not in window.title and "Chrome" not in window.title and "Firefox" not in window.title:
         return
 
     pyautogui.hotkey('ctrl', 'a')
     pyautogui.hotkey('backspace')
-    
+
     # Quebra a mensagem em linhas
     linhas = mensagem.split('\n')
 

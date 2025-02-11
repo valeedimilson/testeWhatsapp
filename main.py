@@ -22,7 +22,7 @@ def enviaMensagem(mensagem,page):
             content=ft.Column(
                 tight=True,
                 controls=[
-                    ft.Text("O campo de mensagem do whatsapp não foi localizado. Vamos localiza-lo agora.  Com o mouse selecione o icone de EMOJI.")
+                    ft.Text("O campo de mensagem do whatsapp não foi localizado. Vamos localiza-lo agora.  Com o mouse clique e arraste para selecionar o icone de EMOJI.(ou o do clip de papel, no caso da versão Desktop)")
                 ],
             ),
         ),
